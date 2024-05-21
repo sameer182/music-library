@@ -1,0 +1,197 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <algorithm>
+#include <sstream>
+#include "song_library.h"
+
+
+using namespace std;
+
+class Song {
+public:
+    string track;
+    string artist;
+    int duration;
+
+    Song(string t, string a, int d) {
+        track = t;
+        artist = a;
+        duration = d;
+    }
+
+    void printSong() {
+        cout << "Track: " << track << endl;
+        cout << "Artist: " << artist << endl;
+        cout << "Duration (seconds): " << duration << endl;
+    }
+
+    bool operator==(const Song& other) const {
+        return track == other.track && artist == other.artist && duration == other.duration;
+    }
+};
+
+vector<Song> songs;
+
+bool isSongInLibrary(const Song& song) {
+    return find(songs.begin(), songs.end(), song) != songs.end();
+}
+
+void loadSongsFromFile(string filename) {
+    ifstream file(filename);
+    if (!file.is_open()) {
+        cout << "Failed to open file " << filename << endl;
+        return;
+    }
+    string line;
+    while (getline(file, line)) {
+        string track, artist, duration_str;
+        int duration;
+        stringstream ss(line);
+        getline(ss, track, '\t');
+        getline(ss, artist, '\t');
+        getline(ss, duration_str, '\t');
+        duration = stoi(duration_str);
+        Song song(track, artist, duration);
+        if (!isSongInLibrary(song)) {
+            songs.push_back(song);
+        }
+    }
+    file.close();
+}
+
+void printSongs() {
+    for (int i = 0; i < songs.size(); i++) {
+        songs[i].printSong();
+        cout << endl;
+    }
+}
+
+void searchSongs() {
+    string query;
+    cout << "Enter track to search: ";
+    getline(cin, query);
+    bool found = false;
+    for (int i = 0; i < songs.size(); i++) {
+        if (songs[i].track.find(query) != string::npos) {
+            songs[i].printSong();
+            cout << endl;
+            found = true;
+        }
+    }
+    if (!found) {
+        cout << "No songs found with track containing \"" << query << "\"" << endl;
+    }
+}
+
+void searchSongsByArtist() {
+    string query;
+    cout << "Enter artist to search: ";
+    getline(cin, query);
+    bool found = false;
+    for (int i = 0; i < songs.size(); i++) {
+        if (songs[i].artist.find(query) != string::npos) {
+            songs[i].printSong();
+            cout << endl;
+            found = true;
+        }
+    }
+    if (!found) {
+        cout << "No songs found with artist containing \"" << query << "\"" << endl;
+    }
+}
+
+void addSong() {
+    string track, artist, duration_str;
+    int duration;
+    cout << "Enter track name: ";
+    getline(cin, track);
+    cout << "Enter artist/band name: ";
+    getline(cin, artist);
+    cout << "Enter duration (seconds): ";
+    getline(cin, duration_str);
+    duration = stoi(duration_str);
+    Song song(track, artist, duration);
+        if (!isSongInLibrary(song)) {
+        songs.push_back(song);
+        cout << "Song added successfully!" << endl;
+    } else {
+        cout << "Song already exists in the library." << endl;
+    }
+}
+
+void removeSong() {
+    string query;
+    cout << "Enter track name to remove: ";
+    getline(cin, query);
+    bool found = false;
+    for (int i = 0; i < songs.size(); i++) {
+        if (songs[i].track == query) {
+            songs.erase(songs.begin() + i);
+            cout << "Song removed successfully!" << endl;
+            found = true;
+            break;
+        }
+    }
+    if (!found) {
+        cout << "No songs found with track name \"" << query << "\"" << endl;
+    }
+}
+
+void saveSongsToFile(string filename) {
+    ofstream file(filename);
+    if (!file.is_open()) {
+        cout << "Failed to open file " << filename << endl;
+        return;
+    }
+
+    for (int i = 0; i < songs.size(); i++) {
+        file << songs[i].track << "\t" << songs[i].artist << "\t" << songs[i].duration << endl;
+    }
+    file.close();
+    cout << "Tracks saved to file " << filename << " successfully!" << endl;
+}
+
+int main() {
+    string filename = "Songs.txt";
+    loadSongsFromFile(filename);
+    while (true) {
+        cout << endl << "Spotify menu:" << endl;
+        cout << "1. Print all tracks" << endl;
+        cout << "2. Search songs by tracks" << endl;
+        cout << "3. Search songs by Artist or Band name" << endl;
+        cout << "4. Add a track" << endl;
+        cout << "5. Remove a track" << endl;
+        cout << "6. Save changes and exit" << endl;
+        cout << "Enter your choice (1-6):" <<endl;
+        string choice_str;
+        getline(cin, choice_str);
+        int choice = stoi(choice_str);
+        switch (choice) {
+        case 1:
+            printSongs();
+            break;
+        case 2:
+            searchSongs();
+            break;
+        case 3:
+            searchSongsByArtist();
+            break;
+        case 4:
+            addSong();
+            break;
+        case 5:
+            removeSong();
+            break;
+        case 6:
+            saveSongsToFile(filename);
+            return 0;
+        default:
+	  cout << endl << "Invalid choice, please enter a number from 1 to 6." << endl;
+        }
+    }
+    return 0;
+}
+
+   
